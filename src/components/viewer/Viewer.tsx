@@ -25,6 +25,8 @@ function Viewer({ modelFile, depthData, depthSettings, settings, onReady }: View
   const animationRef = useRef<number>(0)
   const initialCameraPos = useRef(new THREE.Vector3())
   const initialCameraTarget = useRef(new THREE.Vector3())
+  const shadowPlaneRef = useRef<THREE.Mesh | null>(null)
+  const contactShadowGroupRef = useRef<THREE.Group | null>(null)
 
   const removeCurrentModel = useCallback(() => {
     const scene = sceneRef.current
@@ -57,8 +59,88 @@ function Viewer({ modelFile, depthData, depthSettings, settings, onReady }: View
       dirLight.position.set(position[0], position[1], position[2])
       dirLight.castShadow = true
       dirLight.shadow.mapSize.set(2048, 2048)
+      dirLight.shadow.camera.near = 0.1
+      dirLight.shadow.camera.far = 50
+      dirLight.shadow.camera.left = -10
+      dirLight.shadow.camera.right = 10
+      dirLight.shadow.camera.top = 10
+      dirLight.shadow.camera.bottom = -10
+      dirLight.shadow.normalBias = 0.02
       scene.add(dirLight)
     })
+  }, [])
+
+  // Create the shadow ground plane
+  const createShadowPlane = useCallback((scene: THREE.Scene) => {
+    // Remove existing shadow plane
+    if (shadowPlaneRef.current) {
+      scene.remove(shadowPlaneRef.current)
+      shadowPlaneRef.current.geometry.dispose()
+      ;(shadowPlaneRef.current.material as THREE.Material).dispose()
+      shadowPlaneRef.current = null
+    }
+
+    const planeGeo = new THREE.PlaneGeometry(30, 30)
+    const planeMat = new THREE.ShadowMaterial({
+      opacity: 0.4,
+      color: 0x000000,
+    })
+    const plane = new THREE.Mesh(planeGeo, planeMat)
+    plane.rotation.x = -Math.PI / 2
+    plane.position.y = -0.01
+    plane.receiveShadow = true
+    plane.name = '__shadow_plane__'
+    scene.add(plane)
+    shadowPlaneRef.current = plane
+  }, [])
+
+  // Create contact shadow (baked floor shadow using render target)
+  const createContactShadow = useCallback((scene: THREE.Scene) => {
+    // Remove existing
+    if (contactShadowGroupRef.current) {
+      scene.remove(contactShadowGroupRef.current)
+      contactShadowGroupRef.current.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.geometry.dispose()
+          ;(child.material as THREE.Material).dispose()
+        }
+      })
+      contactShadowGroupRef.current = null
+    }
+
+    const group = new THREE.Group()
+    group.name = '__contact_shadow__'
+
+    // Soft contact shadow disc under the model
+    const shadowGeo = new THREE.CircleGeometry(1.5, 64)
+    const canvas = document.createElement('canvas')
+    canvas.width = 256
+    canvas.height = 256
+    const ctx = canvas.getContext('2d')!
+    const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 128)
+    gradient.addColorStop(0, 'rgba(0,0,0,0.5)')
+    gradient.addColorStop(0.4, 'rgba(0,0,0,0.3)')
+    gradient.addColorStop(1, 'rgba(0,0,0,0)')
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, 256, 256)
+
+    const shadowTex = new THREE.CanvasTexture(canvas)
+    const shadowMat = new THREE.MeshBasicMaterial({
+      map: shadowTex,
+      transparent: true,
+      opacity: 0.5,
+      depthWrite: false,
+      blending: THREE.MultiplyBlending,
+    })
+
+    const shadowMesh = new THREE.Mesh(shadowGeo, shadowMat)
+    shadowMesh.rotation.x = -Math.PI / 2
+    shadowMesh.position.y = -0.005
+    shadowMesh.name = '__contact_shadow_mesh__'
+    group.add(shadowMesh)
+
+    scene.add(group)
+    contactShadowGroupRef.current = group
   }, [])
 
   // Initialize scene
@@ -96,6 +178,10 @@ function Viewer({ modelFile, depthData, depthSettings, settings, onReady }: View
     scene.add(grid)
     gridRef.current = grid
 
+    // Create shadow plane and contact shadow
+    createShadowPlane(scene)
+    createContactShadow(scene)
+
     const animate = () => {
       animationRef.current = requestAnimationFrame(animate)
       controls.update()
@@ -119,7 +205,7 @@ function Viewer({ modelFile, depthData, depthSettings, settings, onReady }: View
         containerRef.current.removeChild(renderer.domElement)
       }
     }
-  }, [setupLighting])
+  }, [setupLighting, createShadowPlane, createContactShadow])
 
   // Load 3D model from file
   useEffect(() => {
@@ -131,6 +217,8 @@ function Viewer({ modelFile, depthData, depthSettings, settings, onReady }: View
       if (cameraRef.current && controlsRef.current) {
         positionCamera(cameraRef.current, controlsRef.current, initialCameraPos.current, initialCameraTarget.current)
       }
+      // Position shadow plane at the bottom of the model
+      updateShadowPlanePosition(object)
     })
   }, [modelFile, removeCurrentModel])
 
@@ -179,7 +267,29 @@ function Viewer({ modelFile, depthData, depthSettings, settings, onReady }: View
     if (cameraRef.current && controlsRef.current) {
       positionCamera(cameraRef.current, controlsRef.current, initialCameraPos.current, initialCameraTarget.current, 3)
     }
+    updateShadowPlanePosition(group)
   }, [depthData, depthSettings, removeCurrentModel])
+
+  // Helper: position shadow plane at model bottom
+  const updateShadowPlanePosition = (object: THREE.Object3D) => {
+    const box = new THREE.Box3().setFromObject(object)
+    const bottomY = box.min.y
+    if (shadowPlaneRef.current) {
+      shadowPlaneRef.current.position.y = bottomY - 0.01
+    }
+    if (contactShadowGroupRef.current) {
+      contactShadowGroupRef.current.position.y = bottomY - 0.005
+      // Scale contact shadow based on model size
+      const size = new THREE.Vector3()
+      box.getSize(size)
+      const maxDim = Math.max(size.x, size.z)
+      const center = new THREE.Vector3()
+      box.getCenter(center)
+      contactShadowGroupRef.current.position.x = center.x
+      contactShadowGroupRef.current.position.z = center.z
+      contactShadowGroupRef.current.scale.set(maxDim * 0.8, maxDim * 0.8, 1)
+    }
+  }
 
   // Update background
   useEffect(() => {
@@ -224,17 +334,119 @@ function Viewer({ modelFile, depthData, depthSettings, settings, onReady }: View
     })
   }, [settings.modelColor, settings.useCustomColor])
 
-  // Update shadows
+  // Update shadows (master toggle)
   useEffect(() => {
-    if (!modelRef.current || !rendererRef.current) return
+    if (!rendererRef.current) return
     rendererRef.current.shadowMap.enabled = settings.showShadows
-    modelRef.current.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        child.castShadow = settings.showShadows
-        child.receiveShadow = settings.showShadows
+    if (modelRef.current) {
+      modelRef.current.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.castShadow = settings.showShadows
+          child.receiveShadow = settings.showShadows
+        }
+      })
+    }
+    // Toggle shadow plane and contact shadow visibility
+    if (shadowPlaneRef.current) {
+      shadowPlaneRef.current.visible = settings.showShadows
+    }
+    if (contactShadowGroupRef.current) {
+      contactShadowGroupRef.current.visible = settings.showShadows
+    }
+  }, [settings.showShadows])
+
+  // Update shadow settings (drop shadow, inner shadow, contact shadow)
+  useEffect(() => {
+    if (!settings.showShadows) return
+    const { shadowSettings } = settings
+
+    // Drop Shadow — controls the ground shadow plane
+    if (shadowPlaneRef.current) {
+      const mat = shadowPlaneRef.current.material as THREE.ShadowMaterial
+      mat.opacity = shadowSettings.dropShadow.enabled ? shadowSettings.dropShadow.opacity : 0
+      mat.color = new THREE.Color(shadowSettings.dropShadow.color)
+
+      // Blur: adjust shadow map softness via light shadow radius
+      const scene = sceneRef.current
+      if (scene) {
+        scene.traverse((child) => {
+          if (child instanceof THREE.DirectionalLight && child.shadow) {
+            child.shadow.radius = shadowSettings.dropShadow.blur
+            // Offset shadow position
+            child.shadow.camera.updateProjectionMatrix()
+          }
+        })
+      }
+      shadowPlaneRef.current.visible = shadowSettings.dropShadow.enabled
+    }
+
+    // Contact Shadow
+    if (contactShadowGroupRef.current) {
+      contactShadowGroupRef.current.visible = shadowSettings.contactShadow
+      contactShadowGroupRef.current.traverse((child) => {
+        if (child instanceof THREE.Mesh && child.material) {
+          ;(child.material as THREE.MeshBasicMaterial).opacity = shadowSettings.contactShadowOpacity
+        }
+      })
+    }
+
+    // Inner Shadow — simulate via hemisphere light ground color darkening + model self-shadow
+    if (sceneRef.current && shadowSettings.innerShadow.enabled) {
+      const innerColor = new THREE.Color(shadowSettings.innerShadow.color)
+      const intensity = shadowSettings.innerShadow.opacity
+      // Apply inner shadow as ambient occlusion simulation on model
+      if (modelRef.current) {
+        modelRef.current.traverse((child) => {
+          if (child instanceof THREE.Mesh && child.material) {
+            const mats = Array.isArray(child.material) ? child.material : [child.material]
+            mats.forEach(mat => {
+              if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshPhysicalMaterial) {
+                mat.aoMapIntensity = intensity * 3
+                // Darken emissive to simulate inner shadow
+                mat.emissive = innerColor.clone().multiplyScalar(intensity * 0.1)
+                mat.needsUpdate = true
+              }
+            })
+          }
+        })
+      }
+    } else if (modelRef.current) {
+      // Reset inner shadow effects
+      modelRef.current.traverse((child) => {
+        if (child instanceof THREE.Mesh && child.material) {
+          const mats = Array.isArray(child.material) ? child.material : [child.material]
+          mats.forEach(mat => {
+            if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshPhysicalMaterial) {
+              mat.aoMapIntensity = 1
+              mat.emissive = new THREE.Color(0x000000)
+              mat.needsUpdate = true
+            }
+          })
+        }
+      })
+    }
+
+    // Needs re-render
+    if (rendererRef.current) {
+      rendererRef.current.shadowMap.needsUpdate = true
+    }
+  }, [settings.showShadows, settings.shadowSettings])
+
+  // Update directional light offset for drop shadow offset
+  useEffect(() => {
+    if (!sceneRef.current || !settings.showShadows) return
+    const { dropShadow } = settings.shadowSettings
+    sceneRef.current.traverse((child) => {
+      if (child instanceof THREE.DirectionalLight && child.shadow) {
+        // Apply shadow offset by moving the shadow camera
+        child.shadow.camera.left = -10 + dropShadow.offsetX
+        child.shadow.camera.right = 10 + dropShadow.offsetX
+        child.shadow.camera.top = 10 - dropShadow.offsetY
+        child.shadow.camera.bottom = -10 - dropShadow.offsetY
+        child.shadow.camera.updateProjectionMatrix()
       }
     })
-  }, [settings.showShadows])
+  }, [settings.shadowSettings.dropShadow.offsetX, settings.shadowSettings.dropShadow.offsetY, settings.showShadows])
 
   // Expose controls to parent
   useEffect(() => {

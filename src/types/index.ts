@@ -5,6 +5,22 @@ export interface ModelInfo {
   source?: 'upload' | 'depth-generated'
 }
 
+export interface ShadowLayer {
+  enabled: boolean
+  color: string
+  opacity: number
+  blur: number
+  offsetX: number
+  offsetY: number
+}
+
+export interface ShadowSettings {
+  dropShadow: ShadowLayer
+  innerShadow: ShadowLayer
+  contactShadow: boolean
+  contactShadowOpacity: number
+}
+
 export interface SceneSettings {
   backgroundColor: string
   backgroundTransparent: boolean
@@ -15,6 +31,7 @@ export interface SceneSettings {
   modelColor: string
   useCustomColor: boolean
   showShadows: boolean
+  shadowSettings: ShadowSettings
 }
 
 export interface ExportSettings {

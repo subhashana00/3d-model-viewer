@@ -56,28 +56,28 @@ function UploadCard({ onFileUpload }: UploadCardProps) {
   }
 
   return (
-    <div className="w-full h-full flex items-center justify-center p-6 pt-20 overflow-auto">
+    <div className="w-full h-full flex items-center justify-center p-4 sm:p-6 pt-16 sm:pt-20 overflow-auto">
       {/* Animated Background */}
       <div className="fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,#1a1a2e_0%,#0a0a0a_50%)]" />
-        <div className="absolute top-1/3 left-1/3 w-80 h-80 bg-indigo-500/10 rounded-full blur-[100px] animate-pulse" />
-        <div className="absolute bottom-1/3 right-1/3 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1.5s' }} />
+        <div className="absolute top-1/3 left-1/3 w-48 sm:w-80 h-48 sm:h-80 bg-indigo-500/10 rounded-full blur-[80px] sm:blur-[100px] animate-pulse" />
+        <div className="absolute bottom-1/3 right-1/3 w-56 sm:w-96 h-56 sm:h-96 bg-purple-500/10 rounded-full blur-[90px] sm:blur-[120px] animate-pulse" style={{ animationDelay: '1.5s' }} />
       </div>
 
       <div className="w-full max-w-[540px] animate-fade-in-up">
         {/* Main Card */}
-        <div className="relative p-8 md:p-12 rounded-[32px] bg-gradient-to-b from-white/[0.08] to-white/[0.02] backdrop-blur-2xl border border-white/[0.08] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)]">
+        <div className="relative p-5 sm:p-8 md:p-12 rounded-2xl sm:rounded-[32px] bg-gradient-to-b from-white/[0.08] to-white/[0.02] backdrop-blur-2xl border border-white/[0.08] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)]">
           
           {/* Decorative top line */}
           <div className="absolute -top-px left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
 
           {/* Header */}
-          <div className="text-center mb-10">
+          <div className="text-center mb-6 sm:mb-10">
             {/* 3D Icon */}
-            <div className="relative w-24 h-24 mx-auto mb-6">
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl rotate-6 opacity-40" />
-              <div className="relative w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-xl shadow-indigo-500/20">
-                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white">
+            <div className="relative w-16 h-16 sm:w-24 sm:h-24 mx-auto mb-4 sm:mb-6">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl sm:rounded-2xl rotate-6 opacity-40" />
+              <div className="relative w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl sm:rounded-2xl shadow-xl shadow-indigo-500/20">
+                <svg className="w-8 h-8 sm:w-11 sm:h-11 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
                   <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
                   <line x1="12" y1="22.08" x2="12" y2="12"/>
@@ -85,17 +85,17 @@ function UploadCard({ onFileUpload }: UploadCardProps) {
               </div>
             </div>
 
-            <h1 className="text-3xl md:text-[34px] font-bold mb-3 bg-gradient-to-r from-white via-indigo-200 to-white bg-clip-text text-transparent">
+            <h1 className="text-2xl sm:text-3xl md:text-[34px] font-bold mb-2 sm:mb-3 bg-gradient-to-r from-white via-indigo-200 to-white bg-clip-text text-transparent">
               3D Model Viewer
             </h1>
-            <p className="text-white/50 text-[15px] max-w-sm mx-auto">
+            <p className="text-white/50 text-[13px] sm:text-[15px] max-w-sm mx-auto px-2">
               Upload your 3D model to preview, customize, and export stunning images
             </p>
           </div>
           
           {/* Dropzone */}
           <div 
-            className={`relative p-10 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-300 group
+            className={`relative p-6 sm:p-10 border-2 border-dashed rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 group
               ${isDragging 
                 ? 'border-indigo-500 bg-indigo-500/10 scale-[1.02]' 
                 : 'border-white/10 hover:border-indigo-500/50 hover:bg-white/[0.02]'
@@ -113,20 +113,20 @@ function UploadCard({ onFileUpload }: UploadCardProps) {
               className="hidden"
             />
             
-            <div className="flex flex-col items-center gap-4">
-              <div className={`w-16 h-16 flex items-center justify-center rounded-2xl transition-all duration-300
+            <div className="flex flex-col items-center gap-3 sm:gap-4">
+              <div className={`w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center rounded-xl sm:rounded-2xl transition-all duration-300
                 ${isDragging ? 'bg-indigo-500/20 text-indigo-400 scale-110' : 'bg-white/5 text-white/40 group-hover:bg-indigo-500/10 group-hover:text-indigo-400'}`}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <svg className="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/>
                   <path d="M12 12v9"/>
                   <path d="m8 17 4-5 4 5"/>
                 </svg>
               </div>
               <div className="text-center">
-                <p className="text-base font-medium text-white mb-1">
+                <p className="text-sm sm:text-base font-medium text-white mb-1">
                   {isDragging ? 'Drop your model here' : 'Drop 3D model or click to browse'}
                 </p>
-                <p className="text-sm text-white/40">
+                <p className="text-xs sm:text-sm text-white/40">
                   GLB, GLTF, OBJ formats supported
                 </p>
               </div>
@@ -135,8 +135,8 @@ function UploadCard({ onFileUpload }: UploadCardProps) {
           
           {/* Error */}
           {error && (
-            <div className="flex items-center gap-3 mt-5 px-4 py-3 bg-red-500/10 rounded-xl text-red-400 text-sm animate-fade-in">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <div className="flex items-center gap-2 sm:gap-3 mt-4 sm:mt-5 px-3 sm:px-4 py-2.5 sm:py-3 bg-red-500/10 rounded-xl text-red-400 text-xs sm:text-sm animate-fade-in">
+              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10"/>
                 <line x1="12" y1="8" x2="12" y2="12"/>
                 <line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -147,11 +147,11 @@ function UploadCard({ onFileUpload }: UploadCardProps) {
         </div>
 
         {/* Features */}
-        <div className="flex items-center justify-center gap-3 mt-6 flex-wrap">
+        <div className="flex items-center justify-center gap-2 sm:gap-3 mt-4 sm:mt-6 flex-wrap">
           {['Orbit Controls', 'Export PNG/JPEG', 'Custom Lighting'].map((feature) => (
             <span 
               key={feature}
-              className="px-3 py-1.5 text-xs font-medium text-white/40 bg-white/5 rounded-full border border-white/5"
+              className="px-2.5 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium text-white/40 bg-white/5 rounded-full border border-white/5"
             >
               {feature}
             </span>
@@ -159,7 +159,7 @@ function UploadCard({ onFileUpload }: UploadCardProps) {
         </div>
         
         {/* Footer */}
-        <p className="text-center mt-6 text-white/30 text-xs">
+        <p className="text-center mt-4 sm:mt-6 text-white/30 text-[10px] sm:text-xs">
           Built for designers & developers
         </p>
       </div>

@@ -29,7 +29,27 @@ function App() {
     showGrid: false,
     modelColor: '#6366f1',
     useCustomColor: false,
-    showShadows: true
+    showShadows: true,
+    shadowSettings: {
+      dropShadow: {
+        enabled: true,
+        color: '#000000',
+        opacity: 0.4,
+        blur: 8,
+        offsetX: 0,
+        offsetY: 2,
+      },
+      innerShadow: {
+        enabled: false,
+        color: '#000000',
+        opacity: 0.3,
+        blur: 4,
+        offsetX: 0,
+        offsetY: 0,
+      },
+      contactShadow: true,
+      contactShadowOpacity: 0.5,
+    }
   })
 
   const [exportSettings, setExportSettings] = useState<ExportSettings>({

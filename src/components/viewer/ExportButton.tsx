@@ -32,11 +32,11 @@ function ExportButton({ onExportImage, onExportModel, format, showModelExport }:
   }
 
   return (
-    <div className="fixed left-6 top-1/2 -translate-y-1/2 z-50 animate-fade-in">
+    <div className="export-button-wrapper z-50 animate-fade-in">
       {/* Main Export Button */}
       <div className="relative">
         <button 
-          className={`flex items-center gap-2 px-6 py-4 text-sm font-semibold text-white rounded-2xl transition-all duration-300
+          className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-semibold text-white rounded-xl sm:rounded-2xl transition-all duration-300
             ${isExporting 
               ? 'bg-black/80 text-white/60' 
               : 'bg-gradient-to-r from-accent to-purple-500 shadow-[0_0_40px_rgba(99,102,241,0.15)] hover:shadow-[0_0_60px_rgba(99,102,241,0.3)]'
@@ -46,19 +46,20 @@ function ExportButton({ onExportImage, onExportModel, format, showModelExport }:
         >
           {isExporting ? (
             <>
-              <span className="w-[18px] h-[18px] border-2 border-white/10 border-t-accent rounded-full animate-spin-slow" />
-              Exporting...
+              <span className="w-4 h-4 sm:w-[18px] sm:h-[18px] border-2 border-white/10 border-t-accent rounded-full animate-spin-slow" />
+              <span className="hidden sm:inline">Exporting...</span>
+              <span className="sm:hidden">...</span>
             </>
           ) : (
             <>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                 <polyline points="7 10 12 15 17 10"/>
                 <line x1="12" y1="15" x2="12" y2="3"/>
               </svg>
               Export
               {showModelExport && (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="6 9 12 15 18 9"/>
                 </svg>
               )}
@@ -68,7 +69,7 @@ function ExportButton({ onExportImage, onExportModel, format, showModelExport }:
 
         {/* Dropdown Menu */}
         {showMenu && showModelExport && (
-          <div className="absolute left-0 bottom-full mb-2 w-48 py-2 rounded-xl glass animate-fade-in">
+          <div className="export-dropdown glass animate-fade-in">
             <button
               onClick={handleExportImage}
               className="w-full flex items-center gap-3 px-4 py-3 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-all"
